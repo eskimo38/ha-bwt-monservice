@@ -199,6 +199,8 @@ class BwtCloudApi:
                 headers={
                     "Accept": "application/vnd.live-component+html",
                     "Content-Type": "application/x-www-form-urlencoded",
+                    # BWT now answers 404 to live-component POSTs without this
+                    "X-Requested-With": "XMLHttpRequest",
                 },
                 allow_redirects=True,
                 timeout=CONNECT_TIMEOUT,

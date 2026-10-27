@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.util import dt as dt_util
 
 from .api import BwtCloudApi, BwtAuthError, BwtConnectionError, BwtApiError
 from .const import (
@@ -17,6 +18,9 @@ from .const import (
     CONF_INTERVAL_CONSUMPTION,
     DEFAULT_INTERVAL_MAIN,
     DEFAULT_INTERVAL_CONSUMPTION,
+    CONSUMPTION_KEYS,
+    GROUP_CONSUMPTION,
+    GROUP_MAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,6 +34,8 @@ class BWTDataUpdateCoordinator(DataUpdateCoordinator):
         self.receipt_line_key: str | None = None
         self._last_main_update: float = 0
         self._last_water_consumption: int = 0
+        # Endpoint groups whose last fetch failed ("main" / "consumption")
+        self._failed_groups: set[str] = set()
 
         # Use a dedicated session with cookie jar so login cookies persist
         # unsafe=True allows cookies for IP-based and non-standard domains
@@ -55,6 +61,24 @@ class BWTDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=interval),
         )
 
+    def key_available(self, key: str) -> bool:
+        """Return False if the endpoint feeding this entity key is failing."""
+        group = GROUP_CONSUMPTION if key in CONSUMPTION_KEYS else GROUP_MAIN
+        return group not in self._failed_groups
+
+    def _mark_failed(self, group: str, err: Exception) -> None:
+        """Flag a group as failed; log at error level on the first failure only."""
+        if group not in self._failed_groups:
+            _LOGGER.error("Failed to update %s data, entities unavailable: %s", group, err)
+        else:
+            _LOGGER.debug("%s data still failing: %s", group, err)
+        self._failed_groups.add(group)
+
+    def _mark_ok(self, group: str) -> None:
+        if group in self._failed_groups:
+            _LOGGER.info("%s data update recovered", group)
+            self._failed_groups.discard(group)
+
     async def _async_update_data(self) -> dict:
         """Fetch data from BWT."""
         try:
@@ -75,28 +99,36 @@ class BWTDataUpdateCoordinator(DataUpdateCoordinator):
                     main_data = await self.api.get_main_data(self.receipt_line_key)
                     data.update(main_data)
                     self._last_main_update = self.hass.loop.time()
+                    self._mark_ok(GROUP_MAIN)
                     _LOGGER.debug("Main data updated")
                 except BwtAuthError:
                     self.receipt_line_key = None
                     raise
                 except BwtApiError as err:
-                    _LOGGER.warning("Failed to update main data: %s", err)
+                    self._mark_failed(GROUP_MAIN, err)
 
             # Consumption data (frequent)
+            consumption_ok = False
             try:
                 consumption_data = await self.api.get_consumption_data(
                     self.receipt_line_key
                 )
                 data.update(consumption_data)
+                # Time of this successful fetch (the dataset only carries the
+                # date of the data, not when we last retrieved it)
+                data["refresh_date"] = dt_util.utcnow()
+                self._mark_ok(GROUP_CONSUMPTION)
+                consumption_ok = True
                 _LOGGER.debug("Consumption data updated")
             except BwtAuthError:
                 self.receipt_line_key = None
                 raise
             except BwtApiError as err:
-                _LOGGER.warning("Failed to update consumption data: %s", err)
+                self._mark_failed(GROUP_CONSUMPTION, err)
+                consumption_ok = False
 
-            # Calculate water increment
-            if "water_consumption" in data:
+            # Calculate water increment (only from fresh data)
+            if consumption_ok and "water_consumption" in data:
                 current = data["water_consumption"]
                 if self._last_water_consumption > 0:
                     if current < self._last_water_consumption:

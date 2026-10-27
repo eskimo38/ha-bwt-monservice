@@ -186,8 +186,13 @@ class BwtCloudApi:
         props_value = live_div.get("data-live-props-value", "")
         props_decoded = html_lib.unescape(props_value)
 
+        try:
+            props = json.loads(props_decoded)
+        except ValueError as err:
+            raise BwtApiError(f"Cannot parse device page props: {err}") from err
+
         payload_data = {
-            "props": json.loads(props_decoded),
+            "props": props,
             "updated": {},
             "args": {},
         }
@@ -221,27 +226,22 @@ class BwtCloudApi:
         graph_div = soup.find("div", id="graph_device")
 
         if not graph_div:
-            _LOGGER.warning(
+            # Usually an expired session (login page served with HTTP 200) or
+            # a changed page layout. Raise so the entities are flagged
+            # unavailable instead of silently keeping stale values.
+            raise BwtApiError(
                 "graph_device div not found in loadConso response "
-                "(length=%d, snippet=%.500s)",
-                len(conso_bytes),
-                conso_bytes[:500],
+                f"(length={len(conso_bytes)}, snippet={conso_bytes[:200]!r})"
             )
-            return {}
 
         dataset = graph_div.get("data-chart-dataset-value", "{}")
         salt_value = graph_div.get("data-chart-salt-value", "0")
 
-        dataset_json = json.loads(html_lib.unescape(dataset))
-
-        result: dict = {
-            "salt_per_regen": int(salt_value),
-        }
-
-        # Parse refreshDate
-        refresh_date_str = dataset_json.get("refreshDate")
-        if refresh_date_str:
-            result["refresh_date"] = _parse_datetime(refresh_date_str)
+        try:
+            dataset_json = json.loads(html_lib.unescape(dataset))
+            result: dict = {"salt_per_regen": int(salt_value)}
+        except (ValueError, TypeError) as err:
+            raise BwtApiError(f"Cannot parse consumption data: {err}") from err
 
         # Parse first line of data (most recent)
         lines = dataset_json.get("lines", [])
@@ -283,19 +283,3 @@ class BwtCloudApi:
     def authenticated(self) -> bool:
         return self._authenticated
 
-
-def _parse_datetime(date_str: str):
-    """Parse a datetime string in various ISO-ish formats, return UTC-aware datetime."""
-    for fmt in (
-        "%Y-%m-%dT%H:%M:%S.%f",
-        "%Y-%m-%d %H:%M:%S",
-        "%Y-%m-%dT%H:%M:%S",
-        "%Y-%m-%d",
-    ):
-        try:
-            naive_dt = datetime.strptime(date_str, fmt)
-            return dt_util.as_utc(naive_dt)
-        except ValueError:
-            continue
-    _LOGGER.warning("Failed to parse datetime '%s'", date_str)
-    return None

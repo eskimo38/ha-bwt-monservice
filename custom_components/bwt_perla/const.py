@@ -27,6 +27,24 @@ BWT_DEVICE_URL = f"{BWT_BASE_URL}/device"
 BWT_SUMMARY_URL = f"{BWT_BASE_URL}/ajax/product-summary"
 BWT_LOAD_CONSO_URL = f"{BWT_BASE_URL}/_components/DeviceTabs/loadConso"
 
+# Entity keys fed by the consumption (loadConso) endpoint. Every other key comes
+# from the main product-summary endpoint. Used to mark only the affected group
+# of entities unavailable when one of the two endpoints fails.
+GROUP_MAIN = "main"
+GROUP_CONSUMPTION = "consumption"
+CONSUMPTION_KEYS = frozenset(
+    {
+        "water_consumption",
+        "water_increment",
+        "regen_count",
+        "salt_consumption",
+        "last_update",
+        "refresh_date",
+        "salt_alarm",
+        "power_outage",
+    }
+)
+
 # Sensor types
 SENSOR_TYPES = {
     "salt": {

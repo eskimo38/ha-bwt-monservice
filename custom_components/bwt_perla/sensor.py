@@ -71,4 +71,5 @@ class BWTSensor(CoordinatorEntity, SensorEntity):
         return (
             self.coordinator.last_update_success
             and self.coordinator.data is not None
+            and self.coordinator.key_available(self._sensor_type)
         )

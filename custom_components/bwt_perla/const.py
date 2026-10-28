@@ -76,6 +76,7 @@ SENSOR_TYPES = {
         "icon": "mdi:water-opacity",
         "device_class": None,
         "state_class": "measurement",
+        "diagnostic": True,
     },
     "out_hardness": {
         "name": "Outlet Hardness",
@@ -83,6 +84,7 @@ SENSOR_TYPES = {
         "icon": "mdi:water-check",
         "device_class": None,
         "state_class": "measurement",
+        "diagnostic": True,
     },
     "pressure": {
         "name": "Pressure",
@@ -150,6 +152,13 @@ SENSOR_TYPES = {
         "name": "Water Consumption",
         "unit": "L",
         "icon": "mdi:water",
+        "device_class": "water",
+        "state_class": "total_increasing",
+    },
+    "total_water_consumption": {
+        "name": "Total Water Consumption",
+        "unit": "L",
+        "icon": "mdi:water-pump",
         "device_class": "water",
         "state_class": "total_increasing",
     },

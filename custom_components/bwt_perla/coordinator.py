@@ -76,8 +76,30 @@ class BWTDataUpdateCoordinator(DataUpdateCoordinator):
 
     def key_available(self, key: str) -> bool:
         """Return False if the endpoint feeding this entity key is failing."""
+        if key == "total_water_consumption":
+            # Computed from both endpoints (consumption + hardness settings)
+            return not self._failed_groups
         group = GROUP_CONSUMPTION if key in CONSUMPTION_KEYS else GROUP_MAIN
         return group not in self._failed_groups
+
+    @staticmethod
+    def _total_water(data: dict) -> float | None:
+        """Whole-house water use from the softened-water volume.
+
+        The unit blends softened water (hardness ~0) with raw water to reach the
+        outlet hardness, so only (inlet - outlet) / inlet of the flow passes the
+        resin: total = softened * inlet / (inlet - outlet). Without a usable
+        hardness pair, the softened volume is returned unchanged.
+        """
+        softened = data.get("water_consumption")
+        if softened is None:
+            return None
+        inlet, outlet = data.get("in_hardness"), data.get("out_hardness")
+        if inlet is None or outlet is None:
+            return None  # hardness not fetched yet: don't guess
+        if inlet <= 0 or outlet >= inlet:
+            return float(softened)
+        return round(softened * inlet / (inlet - outlet), 1)
 
     def _mark_failed(self, group: str, err: Exception) -> None:
         """Flag a group as failed; log at error level on the first failure only."""
@@ -156,6 +178,10 @@ class BWTDataUpdateCoordinator(DataUpdateCoordinator):
                 else:
                     data["water_increment"] = 0
                 self._last_water_consumption = current
+
+            total = self._total_water(data)
+            if total is not None:
+                data["total_water_consumption"] = total
 
             if not data or len(data) < 3:
                 raise UpdateFailed("Insufficient data received")

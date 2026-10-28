@@ -1,4 +1,4 @@
-# BWT Perla - Home Assistant Integration
+# BWT Mon Service - Home Assistant Integration
 
 Custom component for Home Assistant that integrates BWT water softeners (My Perla Optimum) via the [BWT Mon Service](https://www.bwt-monservice.com) cloud API.
 
@@ -42,7 +42,7 @@ Custom component for Home Assistant that integrates BWT water softeners (My Perl
 1. Copy `custom_components/bwt_perla/` to your Home Assistant `custom_components/` directory
 2. Restart Home Assistant
 3. Go to **Settings > Devices & Services > Add Integration**
-4. Search for **BWT Perla**
+4. Search for **BWT Mon Service**
 5. Enter your bwt-monservice.com credentials and device serial number
 
 ## Configuration

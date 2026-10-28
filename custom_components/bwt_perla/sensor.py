@@ -1,4 +1,4 @@
-"""Sensor platform for BWT Perla integration."""
+"""Sensor platform for BWT Mon Service integration."""
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,7 +21,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up BWT Perla sensors based on a config entry."""
+    """Set up BWT Mon Service sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(

@@ -1,4 +1,4 @@
-"""BWT Perla integration for Home Assistant."""
+"""BWT Mon Service integration for Home Assistant."""
 import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -13,7 +13,7 @@ PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up BWT Perla from a config entry."""
+    """Set up BWT Mon Service from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
     coordinator = BWTDataUpdateCoordinator(hass, entry)

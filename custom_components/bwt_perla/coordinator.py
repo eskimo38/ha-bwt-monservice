@@ -1,4 +1,4 @@
-"""Data coordinator for BWT Perla integration."""
+"""Data coordinator for BWT Mon Service integration."""
 import logging
 from datetime import timedelta
 

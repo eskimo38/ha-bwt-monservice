@@ -1,4 +1,4 @@
-"""Config flow for BWT Perla integration."""
+"""Config flow for BWT Mon Service integration."""
 import logging
 
 import aiohttp
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class BWTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for BWT Perla."""
+    """Handle a config flow for BWT Mon Service."""
 
     VERSION = 1
 
@@ -105,7 +105,7 @@ class BWTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class BWTOptionsFlow(config_entries.OptionsFlow):
-    """Handle options flow for BWT Perla."""
+    """Handle options flow for BWT Mon Service."""
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""

@@ -1,4 +1,4 @@
-"""Constants for BWT Perla integration."""
+"""Constants for BWT Mon Service integration."""
 from datetime import timedelta
 
 DOMAIN = "bwt_perla"

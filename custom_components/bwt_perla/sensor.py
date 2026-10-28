@@ -2,6 +2,7 @@
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -50,6 +51,8 @@ class BWTSensor(CoordinatorEntity, SensorEntity):
         self._attr_icon = sensor_info["icon"]
         self._attr_device_class = sensor_info.get("device_class")
         self._attr_state_class = sensor_info.get("state_class")
+        if sensor_info.get("diagnostic"):
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
         self._attr_device_info = {
             "identifiers": {(DOMAIN, self._serial_number)},

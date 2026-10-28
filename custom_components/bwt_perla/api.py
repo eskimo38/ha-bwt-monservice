@@ -135,6 +135,12 @@ class BwtCloudApi:
             "salt": "salt",
             "volOK": "vol_ok",
             "rssiLevel": "wifi_signal",
+            "cpuSoftVer": "firmware_cpu",
+            "iotSoftVer": "firmware_iot",
+            "saltType": "salt_type",
+            "reservVol": "reserve_volume",
+            "regenHour": "regen_hour",
+            "regenMin": "regen_min",
         }
 
         categories = data.get("dataCategories", {})
@@ -148,6 +154,15 @@ class BwtCloudApi:
                         _LOGGER.debug(
                             "Mapped '%s' -> '%s': %s", code, code_mapping[code], value
                         )
+
+        # Combine start hour/minute into a single HH:MM value
+        regen_hour = result.pop("regen_hour", None)
+        regen_min = result.pop("regen_min", None)
+        if regen_hour is not None and regen_min is not None:
+            try:
+                result["regen_time"] = f"{int(regen_hour):02d}:{int(regen_min):02d}"
+            except (TypeError, ValueError):
+                pass
 
         _LOGGER.debug("Main data retrieved: %s", result)
         return result

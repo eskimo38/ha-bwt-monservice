@@ -41,7 +41,10 @@ class BWTDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, entry) -> None:
         self.entry = entry
         self.receipt_line_key: str | None = None
-        self._last_main_update: float = 0
+        # None = main data never fetched yet (monotonic clock starts at host boot,
+        # so a numeric 0 would skip the first fetch for `interval_main` seconds
+        # after a host reboot)
+        self._last_main_update: float | None = None
         self._last_water_consumption: int = 0
         # Endpoint groups whose last fetch failed ("main" / "consumption")
         self._failed_groups: set[str] = set()
@@ -104,7 +107,10 @@ class BWTDataUpdateCoordinator(DataUpdateCoordinator):
                 self.entry.data.get(CONF_INTERVAL_MAIN, DEFAULT_INTERVAL_MAIN),
             )
 
-            if (self.hass.loop.time() - self._last_main_update) > interval_main:
+            if (
+                self._last_main_update is None
+                or (self.hass.loop.time() - self._last_main_update) > interval_main
+            ):
                 try:
                     main_data = await self.api.get_main_data(self.receipt_line_key)
                     data.update(main_data)

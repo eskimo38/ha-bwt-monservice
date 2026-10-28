@@ -12,13 +12,31 @@
           "interval_main": "Main update interval (seconds)",
           "interval_consumption": "Consumption update interval (seconds)"
         }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate BWT Mon Service",
+        "description": "BWT rejected the stored login. Enter your current BWT Mon Service credentials.",
+        "data": {
+          "username": "BWT Mon Service login (email)",
+          "password": "Password"
+        }
+      },
+      "reconfigure": {
+        "title": "BWT Mon Service account",
+        "description": "Change the login, password or name for device {serial}. Leave the password empty to keep the current one. The login is tested before saving.",
+        "data": {
+          "username": "BWT Mon Service login (email)",
+          "password": "New password (empty = unchanged)",
+          "device_name": "Device name"
+        }
       }
     },
     "error": {
       "required": "This field is required",
       "invalid_auth": "Authentication failed — check username and password",
       "cannot_connect": "Failed to connect to BWT service",
-      "unknown": "Unexpected error"
+      "unknown": "Unexpected error",
+      "device_not_found": "This account has no device with that serial number"
     },
     "abort": {
       "already_configured": "Device is already configured"
@@ -28,10 +46,11 @@
     "step": {
       "init": {
         "title": "BWT Options",
-        "description": "Configure update intervals",
+        "description": "Update intervals and network timeout. Use Reconfigure (⋮ menu) to change the login or password.",
         "data": {
           "interval_main": "Main update interval (seconds)",
-          "interval_consumption": "Consumption update interval (seconds)"
+          "interval_consumption": "Consumption update interval (seconds)",
+          "request_timeout": "Request timeout (seconds)"
         }
       }
     }

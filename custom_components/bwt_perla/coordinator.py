@@ -5,17 +5,26 @@ from datetime import timedelta
 import aiohttp
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import dt as dt_util
 
-from .api import BwtCloudApi, BwtAuthError, BwtConnectionError, BwtApiError
+from .api import (
+    BwtCloudApi,
+    BwtAuthError,
+    BwtConnectionError,
+    BwtApiError,
+    BwtInvalidCredentials,
+)
 from .const import (
     DOMAIN,
     CONF_SERIAL_NUMBER,
     CONF_INTERVAL_MAIN,
     CONF_INTERVAL_CONSUMPTION,
+    CONF_REQUEST_TIMEOUT,
+    DEFAULT_REQUEST_TIMEOUT,
     DEFAULT_INTERVAL_MAIN,
     DEFAULT_INTERVAL_CONSUMPTION,
     CONSUMPTION_KEYS,
@@ -47,6 +56,7 @@ class BWTDataUpdateCoordinator(DataUpdateCoordinator):
             username=entry.data[CONF_USERNAME],
             password=entry.data[CONF_PASSWORD],
             serial_number=entry.data[CONF_SERIAL_NUMBER],
+            timeout=entry.options.get(CONF_REQUEST_TIMEOUT, DEFAULT_REQUEST_TIMEOUT),
         )
 
         interval = entry.options.get(
@@ -146,6 +156,10 @@ class BWTDataUpdateCoordinator(DataUpdateCoordinator):
 
             return data
 
+        except BwtInvalidCredentials as err:
+            # Wrong/changed password: ask the user instead of retrying forever
+            self.receipt_line_key = None
+            raise ConfigEntryAuthFailed(str(err)) from err
         except (BwtAuthError, BwtConnectionError) as err:
             self.receipt_line_key = None
             raise UpdateFailed(f"Error communicating with API: {err}") from err

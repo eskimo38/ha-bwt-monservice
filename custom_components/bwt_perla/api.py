@@ -20,7 +20,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONNECT_TIMEOUT = aiohttp.ClientTimeout(connect=10, total=30)
+DEFAULT_TOTAL_TIMEOUT = 30
+CONNECT_SECONDS = 10
 
 
 class BwtApiError(Exception):
@@ -29,6 +30,18 @@ class BwtApiError(Exception):
 
 class BwtAuthError(BwtApiError):
     """Authentication failed."""
+
+
+class BwtInvalidCredentials(BwtAuthError):
+    """BWT rejected the username/password (login form shown again).
+
+    Raised only by authenticate(); an expired session on a data request is a
+    plain BwtAuthError and is recovered by logging in again.
+    """
+
+
+class BwtDeviceNotFound(BwtApiError):
+    """The configured serial number is not on this BWT account."""
 
 
 class BwtConnectionError(BwtApiError):
@@ -44,7 +57,11 @@ class BwtCloudApi:
         username: str,
         password: str,
         serial_number: str,
+        timeout: int = DEFAULT_TOTAL_TIMEOUT,
     ) -> None:
+        self._timeout = aiohttp.ClientTimeout(
+            connect=min(CONNECT_SECONDS, timeout), total=timeout
+        )
         self._session = session
         self._username = username
         self._password = password
@@ -61,15 +78,19 @@ class BwtCloudApi:
                 BWT_LOGIN_URL,
                 data={"_username": self._username, "_password": self._password},
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
-                timeout=CONNECT_TIMEOUT,
+                timeout=self._timeout,
             )
         except (aiohttp.ClientError, TimeoutError) as err:
             raise BwtConnectionError(f"Cannot connect to BWT service: {err}") from err
 
         if resp.status in (401, 403):
-            raise BwtAuthError("Authentication failed: invalid credentials")
+            raise BwtInvalidCredentials("Authentication failed: invalid credentials")
         if resp.status != 200:
             raise BwtApiError(f"Unexpected status {resp.status} during login")
+        # A rejected login re-renders /login (HTTP 200, "Identifiants invalides");
+        # a good one ends up on /dashboard.
+        if resp.url.path.rstrip("/").endswith("/login"):
+            raise BwtInvalidCredentials("Authentication failed: invalid credentials")
 
         self._authenticated = True
         _LOGGER.info("BWT authentication successful")
@@ -77,7 +98,7 @@ class BwtCloudApi:
         # Fetch dashboard to find receipt_line_key for our serial number
         try:
             resp = await self._session.get(
-                BWT_DASHBOARD_URL, timeout=CONNECT_TIMEOUT
+                BWT_DASHBOARD_URL, timeout=self._timeout
             )
         except (aiohttp.ClientError, TimeoutError) as err:
             raise BwtConnectionError(f"Cannot fetch dashboard: {err}") from err
@@ -100,7 +121,7 @@ class BwtCloudApi:
                         _LOGGER.info("Receipt line key found: %s", key)
                         return key
 
-        raise BwtApiError(
+        raise BwtDeviceNotFound(
             f"Serial number {self._serial_number} not found in dashboard"
         )
 
@@ -109,7 +130,7 @@ class BwtCloudApi:
         url = f"{BWT_SUMMARY_URL}/{receipt_line_key}"
 
         try:
-            resp = await self._session.get(url, timeout=CONNECT_TIMEOUT)
+            resp = await self._session.get(url, timeout=self._timeout)
         except (aiohttp.ClientError, TimeoutError) as err:
             raise BwtConnectionError(f"Cannot fetch main data: {err}") from err
 
@@ -172,7 +193,7 @@ class BwtCloudApi:
         device_url = f"{BWT_BASE_URL}/device?receiptLineKey={receipt_line_key}"
 
         try:
-            resp = await self._session.get(device_url, timeout=CONNECT_TIMEOUT)
+            resp = await self._session.get(device_url, timeout=self._timeout)
         except (aiohttp.ClientError, TimeoutError) as err:
             raise BwtConnectionError(
                 f"Cannot fetch device page: {err}"
@@ -223,7 +244,7 @@ class BwtCloudApi:
                     "X-Requested-With": "XMLHttpRequest",
                 },
                 allow_redirects=True,
-                timeout=CONNECT_TIMEOUT,
+                timeout=self._timeout,
             )
         except (aiohttp.ClientError, TimeoutError) as err:
             raise BwtConnectionError(f"Cannot fetch consumption data: {err}") from err

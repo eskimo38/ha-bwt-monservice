@@ -12,13 +12,31 @@
           "interval_main": "Intervalle de mise à jour principal (secondes)",
           "interval_consumption": "Intervalle de mise à jour consommation (secondes)"
         }
+      },
+      "reauth_confirm": {
+        "title": "Réauthentification BWT Mon Service",
+        "description": "BWT a refusé l'identifiant enregistré. Saisissez vos identifiants BWT Mon Service actuels.",
+        "data": {
+          "username": "Identifiant BWT Mon Service (email)",
+          "password": "Mot de passe"
+        }
+      },
+      "reconfigure": {
+        "title": "Compte BWT Mon Service",
+        "description": "Modifier l'identifiant, le mot de passe ou le nom de l'appareil {serial}. Laissez le mot de passe vide pour conserver l'actuel. L'identifiant est testé avant l'enregistrement.",
+        "data": {
+          "username": "Identifiant BWT Mon Service (email)",
+          "password": "Nouveau mot de passe (vide = inchangé)",
+          "device_name": "Nom de l'appareil"
+        }
       }
     },
     "error": {
       "required": "Ce champ est obligatoire",
       "invalid_auth": "Échec de l'authentification — vérifiez l'identifiant et le mot de passe",
       "cannot_connect": "Impossible de se connecter au service BWT",
-      "unknown": "Erreur inattendue"
+      "unknown": "Erreur inattendue",
+      "device_not_found": "Ce compte ne contient aucun appareil avec ce numéro de série"
     },
     "abort": {
       "already_configured": "L'appareil est déjà configuré"
@@ -28,10 +46,11 @@
     "step": {
       "init": {
         "title": "Options BWT",
-        "description": "Configurez les intervalles de mise à jour",
+        "description": "Intervalles de mise à jour et délai réseau. Utilisez Reconfigurer (menu ⋮) pour changer l'identifiant ou le mot de passe.",
         "data": {
           "interval_main": "Intervalle de mise à jour principal (secondes)",
-          "interval_consumption": "Intervalle de mise à jour consommation (secondes)"
+          "interval_consumption": "Intervalle de mise à jour consommation (secondes)",
+          "request_timeout": "Délai d'expiration des requêtes (secondes)"
         }
       }
     }

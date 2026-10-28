@@ -9,11 +9,18 @@ CONF_SERIAL_NUMBER = "serial_number"
 CONF_DEVICE_NAME = "device_name"
 CONF_INTERVAL_MAIN = "interval_main"
 CONF_INTERVAL_CONSUMPTION = "interval_consumption"
+CONF_REQUEST_TIMEOUT = "request_timeout"
 
 # Defaults
 DEFAULT_DEVICE_NAME = "BWT My Perla Optimum"
 DEFAULT_INTERVAL_MAIN = 3600  # 1 hour
 DEFAULT_INTERVAL_CONSUMPTION = 60  # 1 minute
+DEFAULT_REQUEST_TIMEOUT = 30  # seconds, total time allowed per request
+
+# Allowed ranges (seconds), shared by the setup form and the options form
+MIN_INTERVAL_MAIN, MAX_INTERVAL_MAIN = 300, 86400
+MIN_INTERVAL_CONSUMPTION, MAX_INTERVAL_CONSUMPTION = 60, 3600
+MIN_REQUEST_TIMEOUT, MAX_REQUEST_TIMEOUT = 10, 120
 
 # Update intervals
 UPDATE_INTERVAL_MAIN = timedelta(seconds=3600)

@@ -34,7 +34,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def _sync_device_registry() -> None:
         dev_reg = dr.async_get(hass)
         serial = entry.data[CONF_SERIAL_NUMBER]
-        device = dev_reg.async_get_device(identifiers={(DOMAIN, serial)})
+        identifier = (DOMAIN, serial)
+        if hasattr(dev_reg, "async_get_device_by_identifier"):
+            device = dev_reg.async_get_device_by_identifier(identifier, entry.entry_id)
+        else:  # Home Assistant older than the per-entry lookup
+            device = dev_reg.async_get_device(identifiers={identifier})
         if device is None:
             return
         info = build_device_info(entry, coordinator.data, coordinator.receipt_line_key)

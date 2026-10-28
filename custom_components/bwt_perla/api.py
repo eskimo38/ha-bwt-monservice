@@ -255,6 +255,9 @@ class BwtCloudApi:
         try:
             dataset_json = json.loads(html_lib.unescape(dataset))
             result: dict = {"salt_per_regen": int(salt_value)}
+            product = props.get("product") if isinstance(props, dict) else None
+            if isinstance(product, dict) and product.get("productCode"):
+                result["product_code"] = str(product["productCode"])
         except (ValueError, TypeError) as err:
             raise BwtApiError(f"Cannot parse consumption data: {err}") from err
 

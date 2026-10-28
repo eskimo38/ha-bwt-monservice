@@ -15,6 +15,7 @@ from .const import (
     DEFAULT_DEVICE_NAME,
 )
 from .coordinator import BWTDataUpdateCoordinator
+from .device import build_device_info
 
 
 async def async_setup_entry(
@@ -46,20 +47,18 @@ class BWTSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{self._serial_number}_{sensor_type}"
 
         sensor_info = SENSOR_TYPES[sensor_type]
-        self._attr_name = f"{self._device_name} {sensor_info['name']}"
+        self._attr_has_entity_name = True
+        self._attr_name = sensor_info["name"]
         self._attr_native_unit_of_measurement = sensor_info["unit"]
         self._attr_icon = sensor_info["icon"]
         self._attr_device_class = sensor_info.get("device_class")
         self._attr_state_class = sensor_info.get("state_class")
         if sensor_info.get("diagnostic"):
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
-
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._serial_number)},
-            "name": self._device_name,
-            "manufacturer": MANUFACTURER,
-            "model": "My Perla Optimum",
-        }
+        self._entry = entry
+        self._attr_device_info = build_device_info(
+            entry, coordinator.data, coordinator.receipt_line_key
+        )
 
     @property
     def native_value(self):

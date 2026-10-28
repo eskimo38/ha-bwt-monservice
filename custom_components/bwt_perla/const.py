@@ -53,6 +53,7 @@ SENSOR_TYPES = {
         "icon": "mdi:shaker",
         "device_class": "weight",
         "state_class": "measurement",
+        "diagnostic": True,
     },
     "resin_vol": {
         "name": "Resin Volume",
@@ -60,6 +61,7 @@ SENSOR_TYPES = {
         "icon": "mdi:water",
         "device_class": None,
         "state_class": "measurement",
+        "diagnostic": True,
     },
     "in_hardness": {
         "name": "Inlet Hardness",
@@ -88,6 +90,7 @@ SENSOR_TYPES = {
         "icon": "mdi:wifi",
         "device_class": "signal_strength",
         "state_class": "measurement",
+        "diagnostic": True,
     },
     "vol_ok": {
         "name": "Softened Water Volume",
@@ -102,6 +105,7 @@ SENSOR_TYPES = {
         "icon": "mdi:water-percent",
         "device_class": None,
         "state_class": "measurement",
+        "diagnostic": True,
     },
     "regen_time": {
         "name": "Regeneration Time",
@@ -109,6 +113,7 @@ SENSOR_TYPES = {
         "icon": "mdi:clock-start",
         "device_class": None,
         "state_class": None,
+        "diagnostic": True,
     },
     "salt_type": {
         "name": "Salt Type",
@@ -116,6 +121,7 @@ SENSOR_TYPES = {
         "icon": "mdi:shaker",
         "device_class": None,
         "state_class": None,
+        "diagnostic": True,
     },
     "firmware_cpu": {
         "name": "Controller Firmware",
@@ -167,6 +173,7 @@ SENSOR_TYPES = {
         "icon": "mdi:calendar-clock",
         "device_class": "timestamp",
         "state_class": None,
+        "diagnostic": True,
     },
     "refresh_date": {
         "name": "Last Data Refresh",
@@ -174,6 +181,7 @@ SENSOR_TYPES = {
         "icon": "mdi:update",
         "device_class": "timestamp",
         "state_class": None,
+        "diagnostic": True,
     },
 }
 
@@ -182,6 +190,7 @@ BINARY_SENSOR_TYPES = {
         "name": "Online",
         "device_class": "connectivity",
         "icon": "mdi:lan-connect",
+        "diagnostic": True,
     },
     "standby": {
         "name": "Holiday Mode",

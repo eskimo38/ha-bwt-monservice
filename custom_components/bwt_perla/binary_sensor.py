@@ -1,6 +1,7 @@
 """Binary sensor platform for BWT Mon Service integration."""
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -14,6 +15,7 @@ from .const import (
     DEFAULT_DEVICE_NAME,
 )
 from .coordinator import BWTDataUpdateCoordinator
+from .device import build_device_info
 
 
 async def async_setup_entry(
@@ -46,16 +48,17 @@ class BWTBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self._serial_number}_{sensor_type}"
 
         sensor_info = BINARY_SENSOR_TYPES[sensor_type]
-        self._attr_name = f"{self._device_name} {sensor_info['name']}"
+        self._attr_has_entity_name = True
+        self._attr_name = sensor_info["name"]
         self._attr_device_class = sensor_info.get("device_class")
         self._attr_icon = sensor_info.get("icon")
 
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._serial_number)},
-            "name": self._device_name,
-            "manufacturer": MANUFACTURER,
-            "model": "My Perla Optimum",
-        }
+        if sensor_info.get("diagnostic"):
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._entry = entry
+        self._attr_device_info = build_device_info(
+            entry, coordinator.data, coordinator.receipt_line_key
+        )
 
     @property
     def is_on(self):

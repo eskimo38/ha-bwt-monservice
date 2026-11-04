@@ -151,6 +151,27 @@ class BWTDataUpdateCoordinator(DataUpdateCoordinator):
                 consumption_data = await self.api.get_consumption_data(
                     self.receipt_line_key
                 )
+                # The cloud briefly reports 0 (then the real value again) for
+                # the current day shortly before UTC midnight, while the row
+                # date is still the old day. A decrease within the same day is
+                # never real (a real rollover carries a new date), and the
+                # water sensors are total_increasing: HA would book the drop as
+                # a counter reset and the rebound as new consumption.
+                prev_water = data.get("water_consumption")
+                new_water = consumption_data.get("water_consumption")
+                if (
+                    prev_water is not None
+                    and new_water is not None
+                    and new_water < prev_water
+                    and consumption_data.get("last_date") == data.get("last_date")
+                ):
+                    _LOGGER.debug(
+                        "Ignoring water consumption drop %s -> %s within day %s",
+                        prev_water,
+                        new_water,
+                        data.get("last_date"),
+                    )
+                    consumption_data["water_consumption"] = prev_water
                 data.update(consumption_data)
                 # Time of this successful fetch (the dataset only carries the
                 # date of the data, not when we last retrieved it)
